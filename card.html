@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hollow Signal Preview</title>
+    <style>
+        /* Re-using your core variables for continuity */
+        :root {
+            --bg-dark: #0b0c10;
+            --panel-bg: #14171e;
+            --panel-border: #222733;
+            --zzz-yellow: #ffcc00; /* Iconic ZZZ Neon Yellow */
+            --zzz-cyan: #00f0ff;
+            --text-main: #f0f3f8;
+            --text-muted: #7a8599;
+            --font-mono: 'Courier New', Courier, monospace;
+        }
+
+        body {
+            background: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* --- THE HOLLOW SIGNAL THEME CARD --- */
+        
+        .zzz-embed-container {
+            width: 100%;
+            max-width: 480px; /* Standard link preview width */
+            text-decoration: none; /* Removes underline from links */
+            transition: transform 0.2s ease;
+        }
+
+        .zzz-embed-container:hover {
+            transform: translateY(-2px) scale(1.01);
+        }
+
+        .hollow-embed-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+            
+            /* Continuity: Iconic ZZZ cutout on bottom right corner */
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
+        }
+
+        /* Industrial Caution Stripes border on the left */
+        .hollow-embed-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            /* Yellow and Black diagonal stripes */
+            background-image: repeating-linear-gradient(
+                -45deg,
+                var(--zzz-yellow),
+                var(--zzz-yellow) 5px,
+                #000 5px,
+                #000 10px
+            );
+        }
+
+        /* Terminal-style header */
+        .embed-header-bar {
+            padding: 8px 12px 6px 20px; /* left padding accounts for caution stripes */
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--panel-border);
+            letter-spacing: 2px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .status-indicator {
+            color: var(--zzz-cyan);
+        }
+
+        /* Gritty Image Area */
+        .embed-image-wrapper {
+            position: relative;
+            width: 100%;
+            height: 160px; /* Reduced height for compactness */
+            background: #222; /* Fallback color */
+            overflow: hidden;
+        }
+
+        .embed-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            
+            /* Apply filters to make standard images feel gritty/noir */
+            filter: grayscale(80%) contrast(120%);
+        }
+
+        /* Glitch/Scanline Overlay Effect over the image */
+        .image-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(
+                rgba(0, 0, 0, 0.1),
+                rgba(0, 0, 0, 0.1) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+        }
+
+        /* Text Content Area */
+        .embed-content {
+            padding: 12px 16px 15px 20px;
+        }
+
+        .embed-title {
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--zzz-yellow); /* Neon yellow title */
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .embed-description {
+            font-size: 0.85rem;
+            color: var(--text-main);
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        .embed-source-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            border-top: 1px dashed var(--panel-border);
+            padding-top: 8px;
+        }
+
+        .source-icon {
+            color: var(--zzz-cyan);
+            margin-right: 4px;
+        }
+
+        @keyframes pulse-cyan {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+    </style>
+</head>
+<body>
+
+    <a href="https://tntprizz.github.io" target="_blank" class="zzz-embed-container">
+        
+        <div class="hollow-embed-card">
+            
+            <div class="embed-header-bar">
+                <span>// [SOURCE_NODE_PROFILE]</span>
+                <span class="status-indicator">● SYNC_LIVE</span>
+            </div>
+
+            <div class="embed-image-wrapper">
+                <img src="pfp.jpg" alt="Profile Banner" class="embed-image">
+                <div class="image-overlay"></div>
+            </div>
+
+            <div class="embed-content">
+                <div class="embed-title">SYSTEM_USER: TNTprizz80315</div>
+                <div class="embed-description">
+                    // INVESTIGATE PROFILE HERE //
+                </div>
+                
+                <div class="embed-source-row">
+                    <span><span class="source-icon">📡</span> DATA_SOURCE: 404 NOT FOUND</span>
+                    <span>LOG_v1.05</span>
+                </div>
+            </div>
+
+        </div>
+    </a>
+
+</body>
+</html>
