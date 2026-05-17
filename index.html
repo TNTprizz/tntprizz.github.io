@@ -10,7 +10,7 @@
     <meta property="og:title" content="// TNTprizz80315 // Profile">
     <meta property="og:description" content="早餐都喝維他奶">
     <meta property="og:image" content="https://tntprizz.github.io/Rich_Preview_Banner.png">
-    <meta property="og:site_name" content="github.io">
+    <meta property="og:site_name" content="github.io"/>
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="https://tntprizz.github.io/">
@@ -285,6 +285,59 @@
             transform: translateY(-1px);
         }
 
+        .music-widget {
+            background: linear-gradient(135deg, #14171e 0%, #0d0f14 100%);
+        }
+
+        .track-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 12px;
+        }
+
+        .album-art-wrapper {
+            width: 50px;
+            height: 50px;
+            border: 1px solid var(--zzz-cyan);
+            animation: spin 12s linear infinite;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+
+        .album-art-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .track-metadata {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .track-title {
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+
+        .track-artist {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--zzz-cyan);
+        }
+
+        .pulse-dot {
+            color: #ff3333;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+
     </style>
 </head>
 <body>
@@ -315,12 +368,29 @@
         <section class="zzz-card">
             <div class="section-title">
                 <span id="text-identity-title">// IDENTITY_RECORD</span>
-                <span>v1.0.3</span>
+                <span>v1.0.5</span>
             </div>
             <p id="text-intro" class="intro-text">
             </p>
             <div id="text-sys-log" class="system-log">
             </div>
+        </section>
+
+        <!-- NOW PLAYING -->
+        <section class="zzz-card music-widget">
+            <div class="section-title"><span>// AUDIO_LINK</span><span class="pulse-dot">● LIVE</span></div>
+            <a id="track-link" href="#" target="_blank" style="text-decoration: none; color: inherit; display: block;">
+                <div class="track-container">
+                    <!-- CD Vinyl Spin Motif -->
+                    <div class="album-art-wrapper">
+                        <img id="album-art" src="https://via.placeholder.com/60" alt="Album Art">
+                    </div>
+                    <div class="track-metadata">
+                        <div id="track-title" class="track-title">Offline</div>
+                        <div id="track-artist" class="track-artist">404 Not Found</div>
+                    </div>
+                </div>
+            </a>
         </section>
 
         <!-- LIVE GAME DATA & UIDs -->
@@ -335,7 +405,7 @@
                 <div class="game-row">
                     <div class="game-info-col">
                         <span class="game-name">
-                            <div id="zzz-title">Zenless Zone Zero </div><span class="game-data" id="zzz-level">Lv.--</span>
+                            <div id="zzz-title">Zenless Zone Zero </div><span class="game-data" id="zzz-level">TW, HK, MO</span>
                         </span>
                         <div class="uid-display">UID: 1700070571</div>
                     </div>
@@ -346,7 +416,7 @@
                 <div class="game-row">
                     <div class="game-info-col">
                         <span class="game-name">
-                            <div id="ark-title">Arknights</div> <span class="game-data" id="ak-level">Lv.--</span>
+                            <div id="ark-title">Arknights</div> <span class="game-data" id="ak-level">TWXY</span>
                         </span>
                         <div class="uid-display">ID: tntprizz80315#0222</div>
                     </div>
@@ -357,7 +427,7 @@
                 <div class="game-row">
                     <div class="game-info-col">
                         <span class="game-name">
-                            <div id="nte-title">Neverness to Everness</div> <span class="game-data" id="nte-status">Pending...</span>
+                            <div id="nte-title">Neverness to Everness</div> <span class="game-data" id="nte-status">TW, HK, MO</span>
                         </span>
                         <div class="uid-display">UID: 214077141012</div>
                     </div>
@@ -368,7 +438,7 @@
                 <div class="game-row">
                     <div class="game-info-col">
                         <span class="game-name">
-                            <div id="chu-title">CHUNITHM</div> <span class="game-data" id="chu-status">Pending...</span>
+                            <div id="chu-title">CHUNITHM</div> <span class="game-data" id="chu-status"> --.--</span>
                         </span>
                         <div class="uid-display">UID: 100502294592148</div> <!--To Be done-->
                     </div>
@@ -379,7 +449,7 @@
                 <div class="game-row">
                     <div class="game-info-col">
                         <span class="game-name">
-                            <div id="mai-title">maimai</div> <span class="game-data" id="mai-status">Pending...</span>
+                            <div id="mai-title">maimai</div> <span class="game-data" id="mai-status"> -----</span>
                         </span>
                         <div class="uid-display">UID: 100308284199158</div> <!--To Be done-->
                     </div>
@@ -513,35 +583,79 @@
             });
         }
 
-        /* --- 3. DYNAMIC STATS LOADER (Simulated GitHub Action output) --- */
-        async function loadGameStats() {
+
+        async function fetchLiveTrack() {
+            const apacheEndpoint = 'https://alive-merely-eel.ngrok-free.app/now-playing.json';
+
             try {
-                // In production, fetch your JSON file generated by GitHub actions:
-                const response = await fetch('./game-stats.json'); // PLACEHOLDER
-                const data = await response.json();
-    
-                // Simulated fast response data
-                // const data = {
-                //     lastUpdated: "JUST NOW",
-                //     zzzLevel: "TW, HK, MO Lv.52",
-                //     akLevel: "TXWY Lv.120",
-                //     nteStatus: "TW, HK, MO Lv.32",
-                //     chuLevel: "Rating: 15.93",
-                //     maiLevel: "Rating: 11550"
-                // };
+                const response = await fetch(`${apacheEndpoint}?t=${Date.now()}`, {
+                    method: "GET",
+                    headers: {
+                        "ngrok-skip-browser-warning": "114514"
+                    }
+                });
+                if (!response.ok) throw new Error("Stream Offline");
 
-                // Inject data safely
-                document.getElementById('sync-time').innerText = `SYNCED: ${data.lastUpdated}`;
-                document.getElementById('zzz-level').innerText = data.zzzLevel;
-                document.getElementById('ak-level').innerText = data.akLevel;
-                document.getElementById('nte-status').innerText = data.nteStatus;
-                document.getElementById('chu-status').innerText = data.chuLevel;
-                document.getElementById('mai-status').innerText = data.maiLevel;
+                const song = await response.json();
 
+                // 1. Update the Text & Images
+                document.getElementById('track-title').innerText = song.title;
+                document.getElementById('track-artist').innerText = song.artist;
+                document.getElementById('album-art').src = song.album_art;
+
+                // 2. DYNAMICALLY UPDATE THE YOUTUBE URL HERE
+                const trackLink = document.getElementById('track-link');
+                if (song.url) {
+                    trackLink.href = song.url;
+                    trackLink.style.pointerEvents = "auto"; // Enable clicking
+                } else {
+                    trackLink.removeAttribute('href'); // Remove link if no URL exists
+                    trackLink.style.pointerEvents = "none";
+                }
 
             } catch (error) {
-                document.getElementById('sync-time').innerText = "SYNC_FAILED";
-                console.error("Could not load live game statistics:", error);
+                console.log("Transmission failed.", error);
+                document.getElementById('track-title').innerText = "Offline";
+                document.getElementById('track-artist').innerText = "404 Not Found";
+                document.getElementById('album-art').src = "";
+
+                // Disable link on fallback error state
+                const trackLink = document.getElementById('track-link');
+                trackLink.removeAttribute('href');
+                trackLink.style.pointerEvents = "none";
+            }
+        }
+
+        async function fetchLiveGameStats() {
+            // Reusing your active ngrok/Apache configuration channel setup
+            const endpoint = 'https://alive-merely-eel.ngrok-free.app/game-data.json';
+
+            try {
+                const response = await fetch(`${endpoint}?t=${Date.now()}`, {
+                    method: "GET",
+                    headers: { "ngrok-skip-browser-warning": "114514" }
+                });
+                if (!response.ok) throw new Error("Terminal Sync Offline");
+
+                const data = await response.json();
+                const games = data.games;
+
+                // Update System UI Nodes
+                document.getElementById('sync-time').innerText = `SYNCED: ${data.last_synced}`;
+
+                // ZZZ Update
+                document.getElementById('zzz-level').innerText = `TW, HK, MO Lv.${games.zzz}`;
+                // Arknights Update
+                document.getElementById('ak-level').innerText = `TWXY Lv.${games.arknights}`;
+                // Maimai Update
+                document.getElementById('mai-status').innerText = games.maimai;
+                // CHUNITHM Update
+                document.getElementById('chu-status').innerText = games.chunithm;
+                // NTE Update
+                document.getElementById('nte-status').innerText = `TW, HK, MO Lv.${games.nte}`
+
+            } catch (error) {
+                console.error("Failed to read master game mainframe data grid:", error);
             }
         }
 
@@ -550,8 +664,8 @@
             // 1. Set language on load
             applyTranslations(currentLang);
             
-            // 2. Fetch external game stats
-            loadGameStats();
+            fetchLiveTrack();
+            fetchLiveGameStats();
         });
     </script>
 </body>
