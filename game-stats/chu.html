@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal // CHUNITHM</title>
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --panel-bg: #14171e;
+            --border-color: #222733;
+            
+            /* --- CUSTOMIZE ACCENTS PER GAME HERE --- */
+            --accent-primary: #ffcc00; /* ZZZ Yellow / Arknights Amber */
+            --accent-sub: #00f0ff;     /* Cyan sub-nodes */
+            
+            --text-main: #f0f3f8;
+            --text-muted: #7a8599;
+            --font-mono: 'Courier New', Courier, monospace;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            /* Immersive CRT scanline overlay matching index.html */
+            background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 6px 100%;
+        }
+
+        .dashboard-container {
+            width: 100%;
+            max-width: 800px; /* Slightly wider to give 16:9 screenshots maximum room */
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* --- CONTROL ROW & BUTTONS --- */
+        .top-control-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: -5px;
+        }
+
+        .nav-back-btn, .lang-btn {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            border: 1px solid var(--border-color);
+            padding: 6px 14px;
+            border-radius: 0px;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .nav-back-btn:hover, .lang-btn:hover {
+            color: var(--accent-primary);
+            border-color: var(--accent-primary);
+            background: rgba(255, 204, 0, 0.05);
+        }
+
+        /* --- NEO-NOIR INDUSTRIAL PANELS --- */
+        .terminal-cell {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            position: relative;
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
+        }
+
+        .terminal-cell::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent-primary);
+        }
+
+        /* Sub-node framing variations */
+        .terminal-cell.sub-node::before {
+            background: var(--accent-sub);
+        }
+
+        .cell-tag {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        /* --- HEADER NODE --- */
+        .header-main h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: var(--text-main);
+        }
+
+        .game-meta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 0.8rem;
+            font-family: var(--font-mono);
+            color: var(--text-muted);
+            margin-top: 6px;
+            align-items: center;
+        }
+
+        .highlight-text {
+            color: var(--accent-primary);
+            font-weight: bold;
+        }
+
+        /* --- SCREENSHOT MATRIX HOUSING --- */
+        .screenshot-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .screenshot-wrapper {
+            background: #11141d;
+            border: 1px solid var(--border-color);
+            padding: 6px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: border-color 0.3s ease;
+        }
+
+        .screenshot-wrapper:hover {
+            border-color: var(--accent-sub);
+        }
+
+        .screenshot-wrapper img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: contain;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        /* Technical caption text accompanying individual screens */
+        .screenshot-caption {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* --- FOOTER STATUS --- */
+        .terminal-status {
+            font-family: var(--font-mono);
+            text-align: center;
+            color: var(--accent-primary);
+            font-size: 0.75rem;
+            margin-top: 10px;
+            letter-spacing: 1px;
+            opacity: 0.8;
+        }
+
+        .proxy-uid {
+            color: var(--text-main);
+            background: #1f2433;
+            padding: 2px 6px;
+            border-radius: 2px;
+            border: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <div class="top-control-row">
+        <a href="../index.html" class="nav-back-btn" id="text-back-btn">&lt; Back to System Index</a>
+        <button id="lang-btn" class="lang-btn" onclick="toggleLanguage()">[系統語言: 繁中]</button>
+    </div>
+
+    <div class="terminal-cell">
+        <div class="cell-tag" id="text-header-node">// SYSTEM_CORE_NODE</div>
+        <div class="header-main">
+            <h1 id="text-game-title">CHUNITHM PROFILE TERMINAL</h1>
+            <div class="game-meta-row">
+                <span>STATUS: <span class="highlight-text" id="text-status-active">STATIC_DATA_LOADED</span></span>
+                <span>// ID: TNTprizz // 100502294592148</span>
+                <span class="proxy-uid" id="proxy-server">VERSE NEW</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="terminal-cell sub-node">
+        <div class="cell-tag" id="text-gallery-node">// STATIC_IDENTITY_VERIFICATION // 靜態身份核驗存檔</div>
+        
+        <div class="screenshot-stack">
+            
+            <div class="screenshot-block">
+                <div class="screenshot-wrapper">
+                    <img src="./assets/chu_Game_Profile.jpg" alt="Game Profile Capture 01">
+                </div>
+                <div class="screenshot-caption">
+                    <span id="text-cap1-left">// MAIN_DASHBOARD // 個人主頁資訊</span>
+                    <span>RESOLVED // 200 OK</span>
+                </div>
+            </div>
+
+            <div class="screenshot-block">
+                <div class="screenshot-wrapper">
+                    <img src="./assets/chu_b50.jpg" alt="Game Profile Capture 02">
+                </div>
+                <div class="screenshot-caption">
+                    <span id="text-cap2-left">// BEST_50_SONGS // B50</span>
+                    <span>RESOLVED // 200 OK</span>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+    <div class="terminal-status" id="text-footer-status">DATA ARCHIVE ONLINE // NOT POWERED BY SEGA</div>
+</div>
+
+<script>
+    /* --- LOCALIZATION ENGINE --- */
+    const langData = {
+        zh: {
+            btnText: "[系統語言: 繁中]",
+            backBtn: "< 返回系統首頁"
+        },
+        en: {
+            btnText: "[SYSTEM_LANG: EN]",
+            backBtn: "< Back to System Index"
+        }
+    };
+
+    // Keep state perfectly shared across components
+    let currentLang = localStorage.getItem('preferredLang') || 'zh';
+
+    function applyTranslations(lang) {
+        const dict = langData[lang];
+        
+        document.getElementById('lang-btn').textContent = dict.btnText;
+        document.getElementById('text-back-btn').textContent = dict.backBtn;
+        //document.getElementById('text-header-node').textContent = dict.headerNode;
+        //document.getElementById('text-gallery-node').textContent = dict.galleryNode;
+        //document.getElementById('text-game-title').textContent = dict.gameTitle;
+        //document.getElementById('text-status-active').textContent = dict.statusActive;
+        // document.getElementById('text-footer-status').textContent = dict.footerStatus;
+        
+        // Context captions check
+        //if(document.getElementById('text-cap1-left')) {
+        //    document.getElementById('text-cap1-left').textContent = dict.cap1Left;
+        //}
+        //if(document.getElementById('text-cap2-left')) {
+        //    document.getElementById('text-cap2-left').textContent = dict.cap2Left;
+        //}
+    }
+
+    function toggleLanguage() {
+        currentLang = (currentLang === 'zh') ? 'en' : 'zh';
+        localStorage.setItem('preferredLang', currentLang);
+        applyTranslations(currentLang);
+    }
+
+    // Initialize Layout Configuration state
+    document.addEventListener("DOMContentLoaded", () => {
+        applyTranslations(currentLang);
+    });
+</script>
+
+</body>
+</html>

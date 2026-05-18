@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal // ZZZ</title>
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --panel-bg: #14171e;
+            --border-color: #222733;
+            --accent-yellow: #ffcc00; /* Authentic ZZZ Neon Yellow */
+            --accent-blue: #00f0ff;   /* Authentic ZZZ Cyan */
+            --accent-red: #ff3e3e;
+            --text-main: #f0f3f8;
+            --text-muted: #7a8599;
+            --font-mono: 'Courier New', Courier, monospace;
+            --rarity-s: linear-gradient(135deg, #ff9000 0%, #ffcc00 100%);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            /* Immersive CRT scanline overlay matching index.html */
+            background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 6px 100%;
+        }
+
+        .dashboard-container {
+            width: 100%;
+            max-width: 720px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* --- CONTROL ROW & BUTTONS --- */
+        .top-control-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: -5px;
+        }
+
+        .nav-back-btn, .lang-btn {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            border: 1px solid var(--border-color);
+            padding: 6px 14px;
+            border-radius: 0px; /* Industrial sharp edges */
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .nav-back-btn:hover, .lang-btn:hover {
+            color: var(--accent-yellow);
+            border-color: var(--accent-yellow);
+            background: rgba(255, 204, 0, 0.05);
+        }
+
+        /* --- NEO-NOIR INDUSTRIAL PANELS --- */
+        .terminal-cell {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            position: relative;
+            /* Signature New Eridu clip-path corner design */
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
+        }
+
+        /* Left accent bar identifier */
+        .terminal-cell::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent-yellow);
+        }
+
+        /* Change subsequent card accents to cyan to show sub-node nesting */
+        .terminal-cell ~ .terminal-cell::before {
+            background: var(--accent-blue);
+        }
+
+        .cell-tag {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        /* --- PROXY PROFILE SECTION --- */
+        .header-main {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center; 
+            gap: 20px;
+        }
+
+        .pfp-wrapper {
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            border: 2px solid var(--accent-yellow);
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.2);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #1c2030;
+            flex-shrink: 0;
+        }
+
+        .pfp-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .title-block h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: var(--text-main);
+        }
+
+        .proxy-meta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 0.8rem;
+            font-family: var(--font-mono);
+            color: var(--text-muted);
+            margin-top: 6px;
+            align-items: center;
+        }
+
+        .proxy-name { 
+            color: #fff; 
+            font-weight: bold; 
+        }
+
+        .proxy-title-badge {
+            background: rgba(255, 204, 0, 0.1);
+            border: 1px solid var(--accent-yellow);
+            border-radius: 2px;
+            padding: 1px 6px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .proxy-level {
+            color: var(--accent-yellow);
+            font-weight: bold;
+        }
+
+        .proxy-uid {
+            color: var(--text-main);
+            background: #1f2433;
+            padding: 2px 6px;
+            border-radius: 2px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* --- SUMMARY MODULES --- */
+        .mode-summary-header {
+            background: #191d26;
+            padding: 15px 20px;
+            border-radius: 0px;
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--accent-blue);
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mode-summary-header.alt-accent { 
+            border-left-color: var(--accent-red); 
+        }
+
+        .sum-block { 
+            display: flex; 
+            flex-direction: column; 
+        }
+
+        .sum-block.right-align { 
+            text-align: right; 
+        }
+
+        .sum-card-title {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .sum-val {
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-blue);
+        }
+
+        .mode-summary-header.alt-accent .sum-val {
+            color: var(--accent-red);
+        }
+
+        .sum-lbl {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--text-main);
+        }
+
+        /* --- AGENT MATRIX GRID --- */
+        .agent-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+        }
+
+        .agent-card {
+            background: #191d26;
+            border: 1px solid var(--border-color);
+            border-radius: 0px;
+            overflow: hidden;
+            text-align: center;
+            position: relative;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .agent-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent-yellow);
+            box-shadow: 0 4px 12px rgba(255, 204, 0, 0.1);
+        }
+
+        .agent-frame {
+            width: 100%;
+            aspect-ratio: 1;
+            background: var(--rarity-s);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .agent-frame img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+
+        /* Diagonal cut element overlay inside frame */
+        .agent-frame::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 0 0 10px 10px;
+            border-color: transparent transparent #11141d transparent;
+        }
+
+        .agent-rank {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            background: rgba(0, 0, 0, 0.75);
+            color: var(--accent-yellow);
+            font-family: var(--font-mono);
+            font-size: 0.65rem;
+            padding: 1px 5px;
+            border-radius: 0px;
+            font-weight: bold;
+            border: 1px solid rgba(255, 204, 0, 0.3);
+            z-index: 2;
+        }
+
+        .agent-details {
+            padding: 8px 4px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: var(--text-main);
+            background: #11141d;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* --- COMBAT OPERATIONAL LOGS --- */
+        .combat-rows-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .combat-row-cell {
+            display: grid;
+            grid-template-columns: 1.2fr 2fr;
+            align-items: center;
+            background: #191d26;
+            border: 1px solid var(--border-color);
+            padding: 12px 15px;
+            border-radius: 0px;
+            gap: 15px;
+            position: relative;
+        }
+
+        .combat-left { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+        }
+
+        .boss-avatar-frame {
+            width: 45px;
+            height: 45px;
+            background: #222733;
+            border-radius: 0px;
+            border: 1px solid #363f59;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .boss-avatar-frame img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+
+        .stage-title { 
+            font-size: 0.85rem; 
+            font-weight: bold; 
+            color: #fff; 
+            letter-spacing: 0.5px;
+        }
+
+        .stage-meta { 
+            font-family: var(--font-mono);
+            font-size: 0.7rem; 
+            color: var(--text-muted); 
+            margin-top: 2px; 
+            text-transform: uppercase;
+        }
+
+        .combat-right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 20px;
+        }
+
+        .lineup-comp { 
+            display: flex; 
+            gap: 6px; 
+            align-items: center; 
+        }
+
+        .char-icon-slot {
+            width: 36px;
+            height: 36px;
+            background: var(--rarity-s);
+            border-radius: 0px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 204, 0, 0.4);
+        }
+
+        .char-icon-slot img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+
+        .boo-icon-slot {
+            width: 34px;
+            height: 34px;
+            background: #11141d;
+            border: 1px solid var(--accent-yellow);
+            border-radius: 50%;
+            overflow: hidden;
+            margin-left: 4px;
+            box-shadow: 0 0 8px rgba(255, 204, 0, 0.15);
+        }
+
+        .boo-icon-slot img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+
+        .score-display {
+            font-family: var(--font-mono);
+            font-size: 1.15rem;
+            font-weight: bold;
+            color: var(--accent-blue);
+            min-width: 95px;
+            text-align: right;
+        }
+
+        .score-display.red-variant { 
+            color: var(--accent-red); 
+        }
+
+        .badge-rating {
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--accent-blue);
+            border: 1px solid var(--accent-blue);
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 0px;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        .badge-rating.red-variant {
+            background: rgba(255, 62, 62, 0.1);
+            color: var(--accent-red);
+            border: 1px solid var(--accent-red);
+        }
+
+        /* --- SYSTEM LOG TERMINAL FOOTER --- */
+        .terminal-status {
+            font-family: var(--font-mono);
+            text-align: center;
+            color: var(--accent-yellow);
+            font-size: 0.75rem;
+            margin-top: 10px;
+            letter-spacing: 1px;
+            opacity: 0.8;
+        }
+
+        /* --- MEDIA QUERIES FOR COMPACT VISUALS --- */
+        @media (max-width: 750px) {
+            .combat-row-cell { 
+                grid-template-columns: 1fr; 
+                gap: 12px; 
+            }
+            .combat-right { 
+                justify-content: space-between; 
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .agent-grid { 
+                grid-template-columns: repeat(3, 1fr); 
+            }
+            .mode-summary-header { 
+                flex-direction: column; 
+                align-items: flex-start; 
+                gap: 10px; 
+            }
+            .sum-block.right-align { 
+                text-align: left; 
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <div class="top-control-row">
+        <a href="../index.html" class="nav-back-btn" id="text-back-btn">&lt; Back to System Index</a>
+        <button id="lang-btn" class="lang-btn" onclick="toggleLanguage()">[系統語言: 繁中]</button>
+    </div>
+
+    <div class="terminal-cell">
+        <div class="cell-tag" id="text-core-node">// SYSTEM_CORE_NODE</div>
+        
+        <div class="header-main">
+            <div class="pfp-wrapper">
+                <img id="proxy-avatar" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Avatar">
+            </div>
+
+            <div class="title-block">
+                <h1>ZENLESS ZONE ZERO MONITOR</h1>
+                <div class="proxy-meta-row">
+                    <span class="proxy-name" id="proxy-nickname">// AWAITING SYNC...</span>
+                    <span class="proxy-title-badge" id="proxy-title"></span>
+                    <span id="proxy-level">LV --</span>
+                    <span class="proxy-uid" id="proxy-server">--</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="terminal-cell">
+        <div class="cell-tag" id="text-roster-title">// PROXY_AGENT_ROSTER (Pinned Agents)</div>
+        <div class="agent-grid" id="agent-grid-container">
+            <div id="text-establishing" style="grid-column: span 6; text-align: center; color: var(--text-muted); padding: 20px;">
+                Establishing connection...
+            </div>
+        </div>
+    </div>
+
+    <div class="terminal-cell">
+        <div class="cell-tag" id="text-shiyu-title">// STAGE_LOGS: SHIYU_DEFENSE // 式輿防衛戰</div>
+        
+        <div class="mode-summary-header">
+            <div class="sum-block">
+                <span class="sum-card-title" id="text-shiyu-score-title">Cumulative Season Score</span>
+                <span class="sum-val" id="shiyu-score">---</span>
+            </div>
+            <div class="sum-block right-align">
+                <span class="sum-card-title" id="text-shiyu-rank-title">Server Standing</span>
+                <span class="sum-lbl" id="shiyu-rank">Rank Percentile: --</span>
+            </div>
+        </div>
+
+        <div class="combat-rows-container" id="shiyu-container"></div>
+    </div>
+
+    <div class="terminal-cell">
+        <div class="cell-tag" id="text-da-title">// STAGE_LOGS: DEADLY_ASSAULT // 危局強襲戰</div>
+        
+        <div class="mode-summary-header alt-accent">
+            <div class="sum-block">
+                <span class="sum-card-title" id="text-da-score-title">Total Operational Score</span>
+                <span class="sum-val" id="da-score">---</span>
+            </div>
+            <div class="sum-block right-align">
+                <span class="sum-card-title" id="text-da-stars-title">Combat Assessment</span>
+                <span class="sum-lbl" id="da-stars">Total Stars: -- ★</span>
+            </div>
+        </div>
+
+        <div class="combat-rows-container" id="da-container"></div>
+    </div>
+    
+    <div class="terminal-status" id="sync-status">INITIALIZING...</div>
+
+</div>
+
+<script>
+    /* --- 1. LOCALIZATION DICTIONARIES --- */
+    const langData = {
+        zh: {
+            btnText: "[系統語言: 繁中]",
+            backBtn: "< 返回系統首頁",
+            coreNode: "// 系統核心節點",
+            rosterTitle: "// 代理人檔案 (已釘選成員)",
+            shiyuTitle: "// 作戰記錄：式輿防衛戰",
+            daTitle: "// 作戰記錄：危局強襲戰",
+            shiyuScoreTitle: "當季累計評分",
+            shiyuRankTitle: "伺服器分佈排名",
+            daScoreTitle: "作戰累計總分",
+            daStarsTitle: "戰術評估評級",
+            syncing: "正與 NGROK 隧道同步...",
+            offline: "連線錯誤：終端同步離線",
+            establishing: "正在建立與 HoYoverse 伺服器的安全連線...",
+            awaitingSync: "// 等待同步...",
+            // Dynamic text templates
+            shiyuRankStr: (rating, rank) => `評級: ${rating}（前 ${rank}）`,
+            daStarsStr: (stars, rank) => `總星數: ${stars} ★（前 ${rank}）`,
+            shiyuLayerStr: (idx) => `第五防線 - 第 ${idx} 隊伍`,
+            shiyuMetaStr: "目標殲滅通關記錄",
+            daMetaStr: "威脅等級已評估",
+            lastSyncedStr: (date) => `LAST SYNC: ${date} | POWERED BY FAIRY`
+        },
+        en: {
+            btnText: "[SYSTEM_LANG: EN]",
+            backBtn: "< Back to System Index",
+            coreNode: "// SYSTEM_CORE_NODE",
+            rosterTitle: "// PROXY_AGENT_ROSTER (Pinned Agents)",
+            shiyuTitle: "// STAGE_LOGS: SHIYU_DEFENSE (式輿防衛戰)",
+            daTitle: "// STAGE_LOGS: DEADLY_ASSAULT (危局強襲戰)",
+            shiyuScoreTitle: "Cumulative Season Score",
+            shiyuRankTitle: "Server Standing",
+            daScoreTitle: "Total Operational Score",
+            daStarsTitle: "Combat Assessment",
+            syncing: "SYNCING WITH NGROK TUNNEL...",
+            offline: "CONNECTION ERROR: Terminal Sync Offline",
+            establishing: "Establishing connection to HoYoverse servers...",
+            awaitingSync: "// AWAITING SYNC...",
+            // Dynamic text templates
+            shiyuRankStr: (rating, rank) => `Rating: ${rating} (Top ${rank})`,
+            daStarsStr: (stars, rank) => `Total Stars: ${stars} ★ (Top ${rank})`,
+            shiyuLayerStr: (idx) => `Fifth Frontier - Layer 0${idx}`,
+            shiyuMetaStr: "Target Clearance Log",
+            daMetaStr: "Threat Level Evaluated",
+            lastSyncedStr: (date) => `LAST SYNC: ${date} | POWERED BY FAIRY`
+        }
+    };
+
+    // Shared global state linked seamlessly with the Index page
+    let currentLang = localStorage.getItem('preferredLang') || 'zh';
+    let cachedRawPayload = null;
+
+    /* --- 2. INTERFACE STATIC TRANSLATIONS --- */
+    function applyStaticTranslations(lang) {
+        const dict = langData[lang];
+        
+        document.getElementById('lang-btn').textContent = dict.btnText;
+        document.getElementById('text-back-btn').textContent = dict.backBtn;
+        //document.getElementById('text-core-node').textContent = dict.coreNode;
+        //document.getElementById('text-roster-title').textContent = dict.rosterTitle;
+        //document.getElementById('text-shiyu-title').textContent = dict.shiyuTitle;
+        //document.getElementById('text-da-title').textContent = dict.daTitle;
+        document.getElementById('text-shiyu-score-title').textContent = dict.shiyuScoreTitle;
+        document.getElementById('text-shiyu-rank-title').textContent = dict.shiyuRankTitle;
+        document.getElementById('text-da-score-title').textContent = dict.daScoreTitle;
+        document.getElementById('text-da-stars-title').textContent = dict.daStarsTitle;
+
+        // If data hasn't loaded yet, translate loading states
+        const nicknameEl = document.getElementById('proxy-nickname');
+        if (nicknameEl.textContent.startsWith('//')) {
+            nicknameEl.textContent = dict.awaitingSync;
+        }
+        const estEl = document.getElementById('text-establishing');
+        if (estEl) {
+            estEl.textContent = dict.establishing;
+        }
+    }
+
+    /* --- 3. CORE RENDERING ENGINE (DYNAMIC DATA) --- */
+    function renderDynamicStats() {
+        if (!cachedRawPayload) return;
+
+        const dict = langData[currentLang];
+        // Dynamic target key adjustment depending on context state string: 'zzzdata-zh' or 'zzzdata-en'
+        const data = cachedRawPayload[`zzzdata-${currentLang}`];
+        if (!data) return;
+
+        // Populate Profile
+        document.getElementById('proxy-avatar').src = data.avatar;
+        document.getElementById('proxy-nickname').textContent = data.nickname;
+        
+        const titleBadge = document.getElementById('proxy-title');
+        titleBadge.textContent = data.title;
+        titleBadge.style.color = `#${data.titlecolour}`;
+        titleBadge.style.borderColor = `#${data.titlecolour}`;
+        
+        document.getElementById('proxy-level').textContent = `LV ${data.level}`;
+        document.getElementById('proxy-server').textContent = data.server;
+
+        // Populate Summary Cards
+        document.getElementById('shiyu-score').textContent = data.shiyu.score.toLocaleString();
+        document.getElementById('shiyu-rank').textContent = dict.shiyuRankStr(data.shiyu.rating, data.shiyu.rank);
+        
+        document.getElementById('da-score').textContent = data.deadassault.score.toLocaleString();
+        document.getElementById('da-stars').textContent = dict.daStarsStr(data.deadassault.stars, data.deadassault.rank);
+
+        // Populate Pinned Agents
+        const agentContainer = document.getElementById('agent-grid-container');
+        agentContainer.innerHTML = '';
+        data.pinned_agents.forEach(agent => {
+            agentContainer.innerHTML += `
+                <div class="agent-card">
+                    <span class="agent-rank">${agent.rarity}</span>
+                    <div class="agent-frame"><img src="${agent.icon}" alt="${agent.name}"></div>
+                    <div class="agent-details">${agent.name}</div>
+                </div>
+            `;
+        });
+
+        // Populate Shiyu Defense Layers
+        const shiyuContainer = document.getElementById('shiyu-container');
+        shiyuContainer.innerHTML = '';
+        data.shiyu.layers.forEach((layer, index) => {
+            const charHtml = layer.characters.map(c => 
+                `<div class="char-icon-slot"><img src="${c.icon}" alt="Agent"></div>`
+            ).join('');
+
+            shiyuContainer.innerHTML += `
+                <div class="combat-row-cell">
+                    <div class="combat-left">
+                        <div class="boss-avatar-frame">
+                            <img src="${layer.bossicon}" alt="Boss">
+                        </div>
+                        <div>
+                            <div class="stage-title">${dict.shiyuLayerStr(index + 1)}</div>
+                            <div class="stage-meta">${dict.shiyuMetaStr}</div>
+                        </div>
+                    </div>
+                    <div class="combat-right">
+                        <div class="lineup-comp">
+                            ${charHtml}
+                            <div class="boo-icon-slot"><img src="${layer.bangboo}" alt="Bangboo"></div>
+                        </div>
+                        <div class="score-display">${layer.score.toLocaleString()} <span class="badge-rating">${layer.rating}</span></div>
+                    </div>
+                </div>
+            `;
+        });
+
+        // Populate Deadly Assault Layers
+        const daContainer = document.getElementById('da-container');
+        daContainer.innerHTML = '';
+        data.deadassault.layers.forEach(layer => {
+            const charHtml = layer.characters.map(c => 
+                `<div class="char-icon-slot"><img src="${c.icon}" alt="Agent"></div>`
+            ).join('');
+
+            daContainer.innerHTML += `
+                <div class="combat-row-cell">
+                    <div class="combat-left">
+                        <div class="boss-avatar-frame">
+                            <img src="${layer.boss.icon}" alt="${layer.boss.name}">
+                        </div>
+                        <div>
+                            <div class="stage-title">${layer.boss.name}</div>
+                            <div class="stage-meta">${dict.daMetaStr}</div>
+                        </div>
+                    </div>
+                    <div class="combat-right">
+                        <div class="lineup-comp">
+                            ${charHtml}
+                            <div class="boo-icon-slot"><img src="${layer.bangboo}" alt="Bangboo"></div>
+                        </div>
+                        <div class="score-display red-variant">${layer.score.toLocaleString()} <span class="badge-rating red-variant">${layer.stars}★</span></div>
+                    </div>
+                </div>
+            `;
+        });
+
+        document.getElementById('sync-status').textContent = dict.lastSyncedStr(cachedRawPayload.last_synced);
+    }
+
+    /* --- 4. NETWORK SYNC OPERATIONAL SEQUENCE --- */
+    async function fetchLiveGameStats() {
+        const endpoint = 'https://alive-merely-eel.ngrok-free.app/game-data.json';
+        const statusEl = document.getElementById('sync-status');
+        statusEl.textContent = langData[currentLang].syncing;
+
+        try {
+            const response = await fetch(`${endpoint}?t=${Date.now()}`, {
+                method: "GET",
+                headers: { "ngrok-skip-browser-warning": "114514" }
+            });
+            if (!response.ok) throw new Error("Terminal Sync Offline");
+            
+            // Cache the master runtime dataset array block
+            cachedRawPayload = await response.json();
+            
+            // Process rendering layout output nodes
+            renderDynamicStats();
+
+        } catch (error) {
+            console.error("Fetch Error:", error);
+            statusEl.textContent = langData[currentLang].offline;
+            statusEl.style.color = "var(--accent-red)";
+        }
+    }
+
+    /* --- 5. INTERACTION TOGGLE CONTROL --- */
+    function toggleLanguage() {
+        currentLang = (currentLang === 'zh') ? 'en' : 'zh';
+        localStorage.setItem('preferredLang', currentLang);
+        
+        // Instant fluid transition using cached elements
+        applyStaticTranslations(currentLang);
+        if (window.location.hostname == "tntprizz.github.com") {
+            /* READ BEFORE AMENDING:
+             * If you bypass this check, you are going to access my private API. The webpage is going to display MY stats instead of yours.
+             * Do bypass this check if you know exactly what you are doing.
+            */
+            renderDynamicStats();
+        }
+    }
+
+    // Sequence Initialization Trigger
+    document.addEventListener("DOMContentLoaded", () => {
+        applyStaticTranslations(currentLang);
+        if (window.location.hostname == "tntprizz.github.com") {
+            /* READ BEFORE AMENDING:
+             * If you bypass this check, you are going to access my private API. The webpage is going to display MY stats instead of yours.
+             * Do bypass this check if you know exactly what you are doing.
+            */
+            fetchLiveGameStats();
+        }
+    });
+</script>
+
+</body>
+</html>
